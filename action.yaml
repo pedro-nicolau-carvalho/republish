@@ -36,7 +36,8 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Deploy Tag Version
+    - name: Republish Tag Version
+      shell: bash
       run: echo "Starting Deploy for tag version ${{ inputs.pull-tag }}."
     - uses: trstringer/manual-approval@v1
       with:
@@ -55,13 +56,15 @@ runs:
         password: ${{ inputs.password }}
         registry: ${{ inputs.registry }}
     - name: Pull Tag Docker Image
+      shell: bash
       run: |
         IFS=',' read -ra ADDR <<< "${{ inputs.images }}"
         for i in "${ADDR[@]}"; do
           echo "Processing $i"
           docker pull ${{ $i }}:${{ inputs.pull-tag }}
         done
-    - name: Tag Deploy Image
+    - name: Tag Images
+      shell: bash
       run: |
         IFS=',' read -ra ADDR <<< "${{ inputs.images }}"
         for i in "${ADDR[@]}"; do
@@ -69,6 +72,7 @@ runs:
           docker tag ${{ $i }}:${{ inputs.pull-tag }} ${{ $i }}:${{ inputs.publish-tag }}
         done
     - name: Docker Push
+      shell: bash
       run: |
         IFS=',' read -ra ADDR <<< "${{ inputs.images }}"
         for i in "${ADDR[@]}"; do
