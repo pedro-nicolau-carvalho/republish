@@ -1,0 +1,77 @@
+name: 'Republish Docker images'
+description: 'Pulls docker images and republishes'
+inputs:
+  pull-tag:
+    description: 'pull-tag'
+    required: true
+    default: ''
+  publish-tag:
+    description: 'publish-tag'
+    required: true
+    default: ''
+  approvers:
+    description: 'approvers'
+    required: true
+    default: ''
+  github-token:
+    description: 'github-token'
+    required: true
+    default: ''
+  registry:
+    description: 'registry'
+    required: true
+    default: ''
+  username:
+    description: 'username'
+    required: true
+    default: ''
+  password:
+    description: 'password'
+    required: true
+    default: ''
+  images:
+    description: 'images'
+    required: true
+    default: ''
+runs:
+  using: "composite"
+  steps:
+    - name: Deploy Tag Version
+      run: echo "Starting Deploy for tag version ${{ inputs.pull-tag }}."
+    - uses: trstringer/manual-approval@v1
+      with:
+        secret: ${{ inputs.github-token }}
+        approvers: ${{ inputs.approvers }}
+        minimum-approvals: 1
+        issue-title: Publishing ${{ inputs.pull-tag }} as deploy docker image
+        issue-body: Please comment 'approve' or 'deny' to publish deploy docker image from ${{ inputs.pull-tag }}.
+        exclude-workflow-initiator-as-approver: false
+        additional-approved-words: ''
+        additional-denied-words: ''
+    - name: Docker Login
+      uses: docker/login-action@v3
+      with:
+        username: ${{ inputs.username }}
+        password: ${{ inputs.password }}
+        registry: ${{ inputs.registry }}
+    - name: Pull Tag Docker Image
+      run: |
+        IFS=',' read -ra ADDR <<< "${{ inputs.images }}"
+        for i in "${ADDR[@]}"; do
+          echo "Processing $i"
+          docker pull ${{ $i }}:${{ inputs.pull-tag }}
+        done
+    - name: Tag Deploy Image
+      run: |
+        IFS=',' read -ra ADDR <<< "${{ inputs.images }}"
+        for i in "${ADDR[@]}"; do
+          echo "Processing $i"
+          docker tag ${{ $i }}:${{ inputs.pull-tag }} ${{ $i }}:${{ inputs.publish-tag }}
+        done
+    - name: Docker Push
+      run: |
+        IFS=',' read -ra ADDR <<< "${{ inputs.images }}"
+        for i in "${ADDR[@]}"; do
+          echo "Processing $i"
+          docker push ${{ $i }}:${{ inputs.publish-tag }}
+        done
