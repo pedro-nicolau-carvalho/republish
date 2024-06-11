@@ -38,14 +38,14 @@ runs:
   steps:
     - name: Republish Tag Version
       shell: bash
-      run: echo "Starting Deploy for tag version ${{ inputs.pull-tag }}."
+      run: echo "Starting republish for tag version ${{ inputs.pull-tag }} to tag ${{ inputs.publish-tag }}."
     - uses: trstringer/manual-approval@v1
       with:
         secret: ${{ inputs.github-token }}
         approvers: ${{ inputs.approvers }}
         minimum-approvals: 1
-        issue-title: Publishing ${{ inputs.pull-tag }} as deploy docker image
-        issue-body: Please comment 'approve' or 'deny' to publish deploy docker image from ${{ inputs.pull-tag }}.
+        issue-title: Publishing ${{ inputs.pull-tag }} as ${{ inputs.publish-tag }} docker image
+        issue-body: Please comment 'approve' or 'deny' to publish ${{ inputs.publish-tag }} image from ${{ inputs.pull-tag }}.
         exclude-workflow-initiator-as-approver: false
         additional-approved-words: ''
         additional-denied-words: ''
